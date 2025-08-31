@@ -1,0 +1,36 @@
+{
+  "name": "test/dependency-confusion-scanner",
+  "description": "Test file for dependency confusion scanning logic",
+  "type": "project",
+  "require": {
+    "php": "^8.0",
+    "symfony/console": "^6.0",
+    "woocommerce/action-scheduler-job-framework": "2.0.0",
+    "automattic/jp-a": "*",
+    "ext-json": "*",
+    "ext-curl": "*",
+    "lib-openssl": "*",
+    "hhvm": "^4.0",
+    "facebook/hhvm": "^4.0",
+    "nonexistent-vendor/fake-package": "^1.0",
+    "completely-fake-org/another-fake": "dev-main"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0",
+    "automattic/test-package-xyz": "^1.0",
+    "woocommerce/fake-dev-tool": "^2.0",
+    "ext-xdebug": "*",
+    "lib-testing": "*",
+    "fake-dev-vendor/nonexistent-tool": "^1.0"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "./packages/local-package"
+    },
+    {
+      "type": "path", 
+      "url": "./missing-path-package"
+    }
+  ]
+}
