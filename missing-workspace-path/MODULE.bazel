@@ -10,5 +10,15 @@ maven_install(
     ]
 )
 
+# Test GitHub repo jacking - this should go to GitHub_Repo_Jacking.txt
+git_repository(
+    name = "test_nested_repo",
+    remote = "https://github.com/fake-nested-org/missing-nested-repo.git",
+    commit = "abc123"
+)
 
-https://github.com/asjkdashjdksjhdskdjkas/testasdfasda
+# Another GitHub reference for testing
+http_archive(
+    name = "another_test",
+    url = "https://github.com/nonexistent-org-test/fake-archive-repo/archive/v1.0.tar.gz"
+)
