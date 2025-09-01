@@ -1,0 +1,238 @@
+# This is a comprehensive test file for GitHub Actions vulnerability scanning
+# It contains INTENTIONAL vulnerabilities for testing purposes - DO NOT use in production
+
+name: Comprehensive Vulnerability Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  # Job 1: Test dependency confusion across multiple platforms
+  dependency-confusion-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Test NPM dependency confusion with workspace paths
+      - name: Setup Node.js with workspace testing
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://npm.pkg.github.com'
+      
+      - name: Install NPM packages (potential DC)
+        run: |
+          npm install nonexistent-test-package-12345
+          npm install @company/internal-missing-pkg
+          npm install --workspace=./frontend missing-frontend-lib
+          npm install --workspace=../backend nonexistent-backend-utils
+          
+      # Test Python/PyPI dependency confusion
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install Python packages (potential DC)
+        run: |
+          pip install missing-test-library-xyz
+          pip install company-internal-tools==1.0.0
+          pip install -e ./python-workspace/missing-module
+          pip install -r requirements-missing.txt
+          
+      # Test Ruby dependency confusion
+      - name: Setup Ruby
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          
+      - name: Install Ruby gems (potential DC)
+        run: |
+          gem install nonexistent-company-gem
+          bundle install --gemfile=./workspace/Gemfile
+          
+      # Test Go dependency confusion
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+          
+      - name: Install Go modules (potential DC)
+        run: |
+          go get github.com/missing-org/missing-repo
+          go mod download
+        working-directory: ./go-workspace
+        
+      # Test Cargo/Rust dependency confusion
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          
+      - name: Build Rust project (potential DC)
+        run: |
+          cargo build --manifest-path=./rust-workspace/Cargo.toml
+          cargo install missing-rust-crate
+          
+      # Test Docker workspace paths
+      - name: Build Docker with workspace paths
+        run: |
+          docker build -f ./docker/Dockerfile .
+          docker build --build-arg WORKSPACE_PATH=./missing-workspace .
+          docker-compose -f ./compose/docker-compose.yml up --build
+
+  # Job 2: Test GitHub repo jacking opportunities
+  repo-jacking-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      # CRITICAL: These actions should be flagged as repo jacking opportunities
+      - name: Use missing action 1
+        uses: missing-org/missing-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Use missing action 2  
+        uses: nonexistent-company/build-tools@main
+        with:
+          config: production
+          
+      - name: Use missing action 3
+        uses: fake-org-12345/deploy-action@v2.1.0
+        
+      # Test workspace missing paths (should trigger WORKSPACE_MISSING_PATH)
+      - name: Test workspace paths
+        run: |
+          echo "Testing workspace paths"
+          ls -la ./missing-frontend-workspace/
+          cd ../missing-backend-workspace/
+          
+      # Test more package managers
+      - name: PHP Composer test
+        run: |
+          composer install --working-dir=./php-workspace
+          composer require missing/php-package
+          
+      - name: Maven test
+        run: |
+          mvn install -f ./java-workspace/pom.xml
+          mvn dependency:resolve
+          
+      - name: Gradle test  
+        run: |
+          ./gradlew build -p ./gradle-workspace
+          
+      # Test Bazel workspace paths
+      - name: Bazel build test
+        run: |
+          bazel build //src:all --experimental_ui_limit_console_output=1
+          bazel build //missing-workspace:targets
+          
+  # Job 3: Test environment variables and secrets
+  secrets-and-env-test:
+    runs-on: ubuntu-latest
+    env:
+      # These should be flagged by custom secret scanner
+      API_KEY: sk_test_1234567890abcdef1234567890abcdef
+      DATABASE_URL: postgres://user:password@localhost:5432/testdb  
+      SLACK_WEBHOOK: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+      AWS_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      PRIVATE_KEY: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpAIBAAKCAQEA1234567890...
+        -----END RSA PRIVATE KEY-----
+        
+    steps:
+      - uses: actions/checkout@v1
+      
+      # More missing actions for repo jacking
+      - name: Deploy with missing action
+        uses: test-company/k8s-deploy@v1
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          DOCKER_REGISTRY: registry.company.com
+          
+      - name: Use community missing action
+        uses: community/missing-linter@v2
+        with:
+          config-file: ./config/linting.yml
+          
+      # Test more dependency confusion scenarios  
+      - name: Install .NET packages
+        run: |
+          dotnet add package MissingCompanyLibrary
+          dotnet restore --packages ./nuget-workspace/
+          
+      - name: Install Swift packages
+        run: |
+          swift package resolve --package-path ./swift-workspace/
+          
+      - name: Test Perl modules
+        run: |
+          cpan install Missing::Company::Module
+          cpanm --installdeps ./perl-workspace/
+          
+      # Dockerfile testing with workspace paths
+      - name: Multi-stage Docker build
+        run: |
+          docker build --target production -f Dockerfile.multi .
+          docker build --build-context workspace=./missing-workspace .
+
+  # Job 4: Test pinning and outdated actions  
+  pinning-test:
+    runs-on: ubuntu-latest
+    steps:
+      # These should trigger pinning/outdated action detection
+      - uses: actions/checkout@latest  # Bad: latest tag
+      - uses: actions/setup-node@v2    # Potentially outdated
+      - uses: missing-org/old-action@v1.0.0  # Missing + version specified
+      
+      # Unpinned missing action (should be flagged for both repo jacking AND pinning)
+      - uses: missing-company/ci-tools@main
+      - uses: fake-org/security-scan@develop
+      
+      - name: Test more workspace scenarios
+        run: |
+          # Test relative paths that should trigger workspace detection
+          npm install --prefix ./web-app/frontend missing-ui-lib
+          pip install --target ./api/backend missing-api-utils  
+          cargo build --manifest-path ./services/auth/Cargo.toml
+          
+      # Test environment variable package references
+      - name: Dynamic package installation
+        env:
+          PACKAGE_NAME: missing-dynamic-package
+          WORKSPACE_PATH: ./missing-services/
+        run: |
+          npm install $PACKAGE_NAME
+          pip install -e $WORKSPACE_PATH
+          
+  # Job 5: Test Docker Compose and complex scenarios
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Complex Docker Compose test
+        run: |
+          # These paths should trigger workspace detection
+          docker-compose -f ./infrastructure/docker-compose.yml build
+          docker-compose -f ./missing-infrastructure/compose.yml up -d
+          
+      - name: Test bind mounts and volumes  
+        run: |
+          docker run -v ./missing-data:/app/data nginx:latest
+          docker run --mount type=bind,source=./missing-configs,target=/configs alpine
+          
+      # Final missing action test
+      - name: Final deployment
+        uses: missing-deployment-org/k8s-deploy@v1.2.3
+        with:
+          namespace: production
+          config: ./k8s/missing-configs/
