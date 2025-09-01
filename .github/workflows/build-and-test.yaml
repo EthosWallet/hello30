@@ -1,0 +1,298 @@
+# Advanced GitHub Actions vulnerability test file
+# Tests edge cases and complex scenarios for comprehensive scanner testing
+
+name: Advanced Vulnerability Scenarios
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+  workflow_call:
+    inputs:
+      workspace_path:
+        required: false
+        type: string
+        default: './default-workspace'
+
+env:
+  # Global environment variables for testing
+  GLOBAL_WORKSPACE: ./global-missing-workspace
+  PACKAGE_REGISTRY: registry.missing-company.com
+  BUILD_CONTEXT: ./missing-build-context
+
+jobs:
+  # Matrix job to test multiple scenarios
+  matrix-dependency-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [14, 16, 18]
+        workspace: ['./frontend-workspace', './backend-workspace', './mobile-workspace']
+        include:
+          - os: macos-latest
+            node-version: 18
+            workspace: './ios-workspace'
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          
+      # Test missing submodule references (should trigger Git submodule jacking)
+      - name: Initialize missing submodules
+        run: |
+          git submodule add https://github.com/missing-org/missing-submodule.git external/missing-lib
+          git submodule add https://github.com/nonexistent-company/ui-components.git components/ui
+          git submodule update --init --recursive
+          
+      - name: Matrix-based workspace testing
+        uses: missing-testing-org/matrix-runner@v1
+        with:
+          workspace: ${{ matrix.workspace }}
+          os: ${{ matrix.os }}
+          node-version: ${{ matrix.node-version }}
+          
+      # Test conditional dependency installation
+      - name: Conditional package installation
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          npm install --workspace=${{ matrix.workspace }} missing-linux-utils
+          pip install --target ${{ matrix.workspace }}/python missing-python-linux-lib
+          
+      - name: Windows-specific packages
+        if: matrix.os == 'windows-latest'  
+        run: |
+          npm install --prefix ${{ matrix.workspace }} missing-windows-tools
+          dotnet add ${{ matrix.workspace }}/dotnet.csproj package MissingWindowsPackage
+
+  # Test complex workspace scenarios
+  workspace-complexity-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Test nested workspace references
+      - name: Complex workspace structure
+        uses: missing-build-org/monorepo-builder@v2
+        with:
+          root-workspace: ./
+          sub-workspaces: |
+            ./apps/web/frontend
+            ./apps/api/backend  
+            ./libs/shared/utils
+            ./packages/missing-internal-lib
+            
+      - name: Multi-level dependency resolution
+        run: |
+          # Test deeply nested workspace paths
+          npm install --workspace=./apps/web/frontend missing-frontend-deps
+          npm install --workspace=./apps/api/backend missing-api-deps
+          pip install -e ./libs/shared/utils/missing-python-module
+          cargo build --manifest-path=./packages/rust-lib/missing-crate/Cargo.toml
+          
+      # Test environment variable injection in workspace paths
+      - name: Dynamic workspace paths
+        env:
+          FRONTEND_WORKSPACE: ./apps/web/missing-frontend
+          BACKEND_WORKSPACE: ./apps/api/missing-backend  
+          SHARED_LIBS: ./libs/missing-shared
+        run: |
+          npm install --workspace=$FRONTEND_WORKSPACE missing-ui-components
+          pip install --target $BACKEND_WORKSPACE missing-api-framework
+          go mod download -C $SHARED_LIBS
+          
+      # Test Bazel workspace scenarios (should trigger WORKSPACE_MISSING_PATH)
+      - name: Bazel workspace testing
+        run: |
+          bazel build //src:all --experimental_ui_limit_console_output=1
+          bazel build //apps/missing-app:targets
+          bazel build //external/missing-deps:all
+          bazel test //tests/missing-test-suite:all
+
+  # Test multiple package managers in single job
+  polyglot-dependency-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+          
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Multiple missing actions for comprehensive repo jacking testing
+      - name: Setup polyglot environment
+        uses: missing-polyglot-org/multi-lang-setup@v1
+        with:
+          languages: 'node,python,ruby,go,rust,java,php'
+          workspace-root: ${{ env.GLOBAL_WORKSPACE }}
+          
+      - name: Another missing setup action
+        uses: enterprise-missing/dev-environment@main
+        with:
+          config-file: ./config/dev-setup.yml
+          
+      # Test all package managers with workspace paths
+      - name: Install Node.js dependencies
+        run: |
+          npm install --workspace=./js-workspace missing-js-framework
+          yarn add --cwd ./yarn-workspace missing-yarn-package  
+          pnpm install --filter ./pnpm-workspace missing-pnpm-lib
+          
+      - name: Install Python dependencies  
+        run: |
+          pip install --target ./python-workspace missing-python-framework
+          pipenv install --dev missing-pipenv-package
+          poetry add --group dev missing-poetry-lib
+          conda install -c missing-channel missing-conda-package
+          
+      - name: Install Ruby dependencies
+        run: |
+          bundle install --gemfile=./ruby-workspace/Gemfile
+          gem install missing-enterprise-gem --source https://gems.company.com
+          
+      - name: Install Go dependencies
+        run: |
+          go get github.com/missing-company/missing-go-lib
+          go mod download -C ./go-workspace
+          
+      - name: Install Rust dependencies
+        run: |
+          cargo install --path ./rust-workspace missing-rust-tool
+          cargo build --manifest-path=./rust-workspace/Cargo.toml
+          
+      - name: Install Java/Maven dependencies
+        run: |
+          mvn install -f ./java-workspace/pom.xml
+          mvn dependency:resolve -Dsilent=true
+          ./gradlew build -p ./gradle-workspace
+          
+      - name: Install PHP dependencies
+        run: |
+          composer install --working-dir=./php-workspace
+          composer require --working-dir=./php-workspace missing/php-enterprise-lib
+          
+      # Test additional package managers
+      - name: Install other language dependencies
+        run: |
+          # Dart/Flutter
+          flutter pub get --directory=./flutter-workspace
+          dart pub add missing_dart_package --directory=./dart-workspace
+          
+          # R packages
+          Rscript -e "install.packages('MissingRPackage', repos='https://cran.company.com')"
+          
+          # Perl modules  
+          cpan install Missing::Company::Module
+          cpanm --installdeps ./perl-workspace/
+          
+          # Swift packages
+          swift package resolve --package-path ./swift-workspace/
+          swift package update --package-path ./swift-workspace/
+
+  # Test containerized scenarios
+  container-advanced-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      # Test missing container actions
+      - name: Container build action
+        uses: missing-container-org/docker-buildx@v1
+        with:
+          context: ${{ env.BUILD_CONTEXT }}
+          dockerfile: ./docker/missing-dockerfile/Dockerfile
+          
+      - name: Container registry action  
+        uses: missing-registry-org/push-image@v2
+        with:
+          registry: ${{ env.PACKAGE_REGISTRY }}
+          repository: missing-app
+          
+      # Test complex Docker scenarios
+      - name: Multi-stage container builds
+        run: |
+          # Test workspace context paths
+          docker build --build-context workspace=./missing-workspace-1 .
+          docker build --build-context libs=./missing-libs-workspace .
+          docker build -f ./docker/missing-context/Dockerfile .
+          
+          # Test Docker Compose with missing workspace paths
+          docker-compose -f ./compose/missing-services/docker-compose.yml build
+          docker-compose -f ./missing-infrastructure/docker-compose.override.yml up -d
+          
+      - name: Container volume testing
+        run: |
+          # Test bind mounts with missing paths (should trigger workspace detection)
+          docker run -v ./missing-data-workspace:/app/data alpine:latest
+          docker run -v ./missing-config-workspace:/app/config alpine:latest
+          docker run --mount type=bind,source=./missing-source,target=/app alpine:latest
+
+  # Test security and secrets scenarios  
+  security-test:
+    runs-on: ubuntu-latest
+    
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      
+    steps:
+      - uses: actions/checkout@v3
+      
+      # More missing actions for repo jacking
+      - name: Security scanning action
+        uses: missing-security-org/vulnerability-scanner@v1
+        with:
+          token: ${{ secrets.SECURITY_TOKEN }}
+          workspace: ./security-workspace
+          
+      - name: Code analysis action
+        uses: missing-analysis-org/static-analysis@main  
+        with:
+          source-path: ./src
+          config: ./analysis/missing-config.yml
+          
+      # Test secret patterns that should be caught
+      - name: Environment with secrets
+        env:
+          
+          # Cloud provider keys
+          GCP_SERVICE_ACCOUNT: |
+            {
+              "type": "service_account",
+              "project_id": "my-project-12345",
+            }
+            
+        run: |
+          echo "Testing secret detection capabilities"
+          # Install packages in workspace with secrets in env
+          npm install --workspace=${{ github.event.inputs.workspace_path || './default-workspace' }} missing-secure-package
+          
+      # Final missing actions
+      - name: Deployment action
+        uses: missing-deploy-org/kubernetes-deploy@v3
+        with:
+          cluster: production
+          namespace: ${{ github.event.inputs.environment }}
+          manifests: ./k8s/missing-manifests/
+          
+      - name: Notification action
+        uses: missing-notify-org/slack-notify@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          message: "Deployment to ${{ github.event.inputs.environment }} completed"
