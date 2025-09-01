@@ -1,0 +1,11 @@
+# This bazel_dep should be detected as dependency confusion vulnerability
+# because it's in a workspace file that gets scanned
+bazel_dep(name = "workspace-missing-package", version = "1.0")
+bazel_dep(name = "nested-fake-dependency", version = "2.0")
+
+# Test Maven artifacts in nested workspace
+maven_install(
+    artifacts = [
+        "com.workspace:missing-nested-artifact:1.0"
+    ]
+)
