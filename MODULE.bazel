@@ -1,0 +1,23 @@
+# Test regular bazel_dep (should appear in bazel.txt)
+bazel_dep(name = "test-missing-package", version = "1.0")
+bazel_dep(name = "another-fake-pkg", version = "2.0")
+
+# Test workspace path override (should create BAZEL_MODULE_OVERRIDE_CONFUSION)
+local_path_override(
+    module_name = "local-missing-module", 
+    path = "./non-existent-path"
+)
+
+# Test GitHub repo jacking (should go to GitHub_Repo_Jacking.txt only)
+git_repository(
+    name = "test_repo",
+    remote = "https://github.com/fake-org-123/missing-repo-456.git"
+)
+
+# Test Maven artifact (should appear in bazel.txt)
+maven_install(
+    artifacts = [
+        "com.fake:missing-artifact:1.0",
+        "org.nonexistent:fake-lib:2.0"
+    ]
+)
